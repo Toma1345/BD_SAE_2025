@@ -130,28 +130,23 @@ GROUP BY i.nom;
 ## 3. Modèle Logique (Datalog)
 
 *Utilisation de l'archive `AbcDatalog-0.7.2.jar` disponible sur Célène*  
-Commande pour lancer le programme : `java -jar AbcDatalog-0.7.2.jar`
+Commande pour lancer le programme : `java -jar AbcDatalog-0.7.2.jar`  
 
 ### 3.1. Prédicats extensionnels
 ```prolog
-...
+piece(id, nom, prix).
+composition(id_piece_composee, id_piece_composant, quantite).
 ```
 
 ### 3.2. Liste des pièces nécessaires pour une pièce composée
 ```prolog
-...
+necessaire(X, Y) :- composition(X, Y, _).
+necessaire(X, Y) :- composition(X, Z, _), necessaire(Z, Y).
 ```
 
-### 3.3. Analysez votre requête pour répondre à la question 1(6)**. 
-> Faites le parallèle de la requête relationnelle (question 1) avec celle que vous venez d’écrire en Datalog (item 2). Pouvez-vous associer certaines parties de la requête relationnelle aux règles de votre programme Datalog ? Comment ?  
-
-<strong style="color:green;">Réponse :</strong>
-<p style="color:grey;"><i>Réponse bientôt ici</i></p>
-
-
-### 3.4. Liste des pièces composées ne contenant aucun composant à 300 euros
+### 3.3. Liste des pièces composées ne contenant aucun composant à 300 euros
 ```prolog
-...
+sans_300(X) :- piece(Y, _, 300), not composition(X, Y, _).
 ```
 
 ---
@@ -178,8 +173,15 @@ Commande pour lancer le programme : `java -jar AbcDatalog-0.7.2.jar`
 
 ### 4.2. Implémentation de la base de données en Neo4J
 ```cypher
-...
+CREATE (:Piece {id: 1, nom: 'Vis en titane', prix: 50});
+CREATE (:Piece {id: 2, nom: 'Panneau de fuselage', prix: 500});
+CREATE (:Piece {id: 3, nom: 'Rivet en aluminium', prix: 5});
+CREATE (p1:Piece {id: 2})-[:COMPOSE_DE {quantite: 8}]->(p2:Piece {id: 1});
+CREATE (p1)-[:COMPOSE_DE {quantite: 20}]->(p3:Piece {id: 3});
 ```
 
-### 4.3. Requête Cypher correspondant à la requête 6 que vous avez écrite en SQL (section 3.1)
-
+### 4.3. Requête pour les composants directs et indirects
+```cypher
+MATCH (p:Piece)-[:COMPOSE_DE*]->(c:Piece)
+RETURN p.nom AS piece_composee, c.nom AS composant;
+```
